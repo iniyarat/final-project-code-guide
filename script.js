@@ -1,7 +1,7 @@
 let quiz;
 let questionsData = [];
 
-// CLASS (requirement)
+// CLASS
 class Quiz {
   constructor(questions) {
     this.questions = questions;
@@ -18,7 +18,7 @@ class Quiz {
   }
 }
 
-// SUBCLASS (requirement)
+// SUBCLASS
 class MultipleChoiceQuiz extends Quiz {
   checkAnswer(selected) {
     if (selected === this.getCurrentQuestion().answer) {
@@ -42,7 +42,7 @@ const startScreen = document.getElementById("start-screen");
 const quizContainer = document.getElementById("quiz-container");
 const resultScreen = document.getElementById("result-screen");
 
-// FETCH JSON (DLC)
+// LOAD QUESTIONS (FETCH)
 async function loadQuestions() {
   let response = await fetch("questions.json");
   questionsData = await response.json();
@@ -62,18 +62,22 @@ startBtn.addEventListener("click", async () => {
 
 // SHOW QUESTION
 function showQuestion() {
-  answersEl.innerHTML = ""; // clear old answers
+  answersEl.innerHTML = "";
+  nextBtn.disabled = true; // disable next until answered
 
   let current = quiz.getCurrentQuestion();
   questionEl.textContent = current.question;
 
-  // LOOP (requirement)
+  let answered = false;
+
   for (let i = 0; i < current.options.length; i++) {
-    let btn = document.createElement("button"); // DOM creation
+    let btn = document.createElement("button");
     btn.textContent = current.options[i];
 
-    // EVENT LISTENER
     btn.addEventListener("click", () => {
+      if (answered) return; // prevent multiple answers
+      answered = true;
+
       let correct = quiz.checkAnswer(current.options[i]);
 
       if (correct) {
@@ -81,6 +85,17 @@ function showQuestion() {
       } else {
         btn.style.backgroundColor = "red";
       }
+
+      // show correct answer + disable all buttons
+      let buttons = answersEl.querySelectorAll("button");
+      for (let b of buttons) {
+        if (b.textContent === current.answer) {
+          b.style.backgroundColor = "green";
+        }
+        b.disabled = true;
+      }
+
+      nextBtn.disabled = false; // allow moving forward
     });
 
     answersEl.appendChild(btn);
@@ -105,7 +120,7 @@ function showResult() {
 
   scoreEl.textContent = `You scored ${quiz.score} out of ${quiz.questions.length}`;
 
-  // LOCAL STORAGE (DLC)
+  // SAVE SCORE (DLC)
   localStorage.setItem("lastScore", JSON.stringify(quiz.score));
 }
 
